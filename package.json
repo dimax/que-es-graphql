@@ -1,0 +1,27 @@
+{
+  "name": "que-es-graphql",
+  "version": "1.0.0",
+  "description": "¿Qué es GraphQL? Slides: https://slides.com/luciano-graziani/que-es-graphql/",
+  "main": "src/index.js",
+  "author": "Luciano Graziani <lgraziani2712@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "keywords": [
+    "graphql",
+    "koa",
+    "slides",
+    "vue",
+    "español"
+  ],
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "apollo-server-koa": "^1.3.4",
+    "graphql": "^0.13.2",
+    "graphql-tools": "2.23.1",
+    "koa": "^2.5.0",
+    "koa-bodyparser": "^4.2.0",
+    "koa-router": "^7.4.0"
+  }
+}
