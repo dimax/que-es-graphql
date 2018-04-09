@@ -1,7 +1,7 @@
 const { makeExecutableSchema } = require('graphql-tools');
 
 const datosDePrueba = {
-  persons: [
+  users: [
     {
       id: 1,
       name: 'Pepe',
@@ -13,7 +13,7 @@ const datosDePrueba = {
     {
       id: 1,
       title: 'Soy la rana',
-      author: 1,
+      user_id: 1,
     }
   ],
 };
@@ -21,28 +21,30 @@ const datosDePrueba = {
 const typeDefs = /* GraphQL */`
 
 type Query {
-  # Recupera todas las personas o,
-  # Si se pasa el parámetro \`last\`, recupera las últimas \`last\` personas
-  allPersons(last: Int): [Person!]
-  allPosts(author: ID): [Post!]
+  users(id: ID): [User]!
+  # Recupera los seguidores de un usuario o,
+  # si se pasa el parámetro \`last\`, recupera los últimos \`last\` seguidores
+  followers(user: ID!, last: Int): [User]!
+  posts(user: ID): [Post]!
 }
 
 type Mutation {
-  # Agrega una nueva persona
-  createPerson(name: String!, age: Int!): Person!
+  # Agrega un nuevo Usuario
+  createUser(name: String!, age: Int!): User!
 }
 
-type Person {
+type User {
   id: ID!
   name: String!
   age: Int!
-  followers: [Person]!
+  posts: [Post]!
+  followers: [User]!
 }
 
 type Post {
   id: ID!
   title: String!
-  author: Person!
+  user: User!
 }
 `
 
@@ -50,17 +52,18 @@ type Post {
  * Tipos de datos
  */
 
-const Person = {
+const User = {
   id: (root) => root.id,
   name: (root) => root.name,
   age: (root) => root.age,
+  posts: (root) => datosDePrueba.posts.filter(post => post.id === root.id),
   followers: (root) => root.followers,
 };
 const Post = {
   id: (root) => root.id,
   title: (root) => root.title,
-  author: (root) => datosDePrueba.persons.reduce((author, actual) => (
-    author || actual.id === root.author && actual
+  user: (root) => datosDePrueba.users.reduce((user, actual) => (
+    user || actual.id === root.user_id && actual
   )),
 };
 
@@ -70,18 +73,27 @@ const Post = {
 
 const Query = {
   // Este método se encarga de manejar las dos posibles
-  // consultas de `allPersons`
-  allPersons: (last) => (
-    last
-      ? datosDePrueba.persons.slice(
-        datosDePrueba.persons.length - last,
-        datosDePrueba.persons.length,
+  // consultas de `users`
+  users: (last) => (
+    !last
+      ? datosDePrueba.users
+      : datosDePrueba.users.slice(
+        datosDePrueba.users.length - last,
+        datosDePrueba.users.length,
       )
-      : datosDePrueba.persons
   ),
-  allPosts: (id) => (
-    !id ? datosDePrueba.posts
-    : datosDePrueba.posts.filter(post => post.author === id)
+  followers: (id, last) => (
+    datosDePrueba.users
+      .filter(user => user.id === id)
+      .slice(
+        !last ? 0 : datosDePrueba.users.length - last,
+        datosDePrueba.users.length
+      )
+  ),
+  posts: (id) => (
+    !id
+      ? datosDePrueba.posts
+      : datosDePrueba.posts.filter(post => post.user_id === id)
   ),
 };
 
@@ -90,16 +102,17 @@ const Query = {
  */
 
 const Mutation = {
-  createPerson: (_, { name, age }) => {
-    const person = {
-      id: datosDePrueba.persons.length + 1,
+  createUser: (_, { name, age }) => {
+    const user = {
+      id: datosDePrueba.users.length + 1,
       name,
       age,
+      followers: [],
     };
 
-    datosDePrueba.persons.push(person);
+    datosDePrueba.users.push(user);
 
-    return person;
+    return user;
   },
 };
 
@@ -107,7 +120,7 @@ const resolvers = {
   Query,
   Mutation,
 
-  Person,
+  User,
   Post,
 };
 
